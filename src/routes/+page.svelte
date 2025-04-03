@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
   import Pdf from '$lib/pdf/pdf.svelte';
 </script>
 

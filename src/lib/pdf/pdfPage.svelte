@@ -1,12 +1,10 @@
-<script>
+<script lang="ts">
     import { onMount } from 'svelte';
+    let { pageNumber, scale, pdfDoc } = $props();
 
-    export let pageNumber = 1;
-    export let scale = 1.0;
-    export let pdfDoc;
-
-    let canvas;
-    let ctx;
+    let canvas : HTMLCanvasElement;
+    let textContainer: HTMLDivElement = $state();
+    let ctx: CanvasRenderingContext2D;
 
     onMount(() => {
         ctx = canvas.getContext('2d');
@@ -40,11 +38,35 @@
         };
         
         await page.render(renderContext).promise;
+        const textContent = await page.getTextContent();
+      
+
+        // Use PDF.js text layer builder
+        const renderTextLayer = await import('pdfjs-dist/web/pdf_viewer.mjs');
+        const textLayer = new renderTextLayer.TextLayerBuilder({
+          pdfPage: page
+        });
+        await textLayer.render({
+          textContentParams: textContent,
+          viewport: viewport
+        });
+        textContainer.append(textLayer.div);
+        
       } catch (error) {
         console.error('Error rendering page:', error);
       }
     }
-
 </script>
 
-<canvas bind:this={canvas}></canvas>
+<div class="pageContainer">
+    <canvas bind:this={canvas}></canvas>
+    <div bind:this={textContainer}></div>
+</div>
+
+<style>
+    @import 'pdfjs-dist/web/pdf_viewer.css';
+
+    .pageContainer {
+        position: relative;
+    }
+</style>

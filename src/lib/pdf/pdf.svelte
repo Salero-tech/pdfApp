@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
     import { onMount } from 'svelte';
     import * as pdfjsLib from 'pdfjs-dist';
     import PdfPage from './pdfPage.svelte';
