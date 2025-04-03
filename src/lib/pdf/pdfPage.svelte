@@ -40,11 +40,59 @@
         };
         
         await page.render(renderContext).promise;
+        const textContent = await page.getTextContent();
+        
+        // Create text layer div
+        const textLayerDiv = document.createElement('div');
+        textLayerDiv.className = 'textLayer';
+        textLayerDiv.style.width = `${viewport.width}px`;
+        textLayerDiv.style.height = `${viewport.height}px`;
+        canvas.parentNode.appendChild(textLayerDiv);
+
+        // Use PDF.js text layer builder
+        const renderTextLayer = await import('pdfjs-dist/web/pdf_viewer.mjs');
+        const textLayer = new renderTextLayer.TextLayerBuilder({
+          textLayerDiv: textLayerDiv,
+          pageIndex: page.pageNumber - 1,
+          viewport: viewport,
+          textContent: textContent
+        });
+        
+        textLayer.render();
+        
       } catch (error) {
         console.error('Error rendering page:', error);
       }
     }
-
 </script>
 
-<canvas bind:this={canvas}></canvas>
+<div class="pageContainer">
+    <canvas bind:this={canvas}></canvas>
+</div>
+
+<style>
+    @import 'pdfjs-dist/web/pdf_viewer.css';
+
+    .pageContainer {
+        position: relative;
+    }
+
+    :global(.textLayer) {
+        position: absolute;
+        left: 0;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        overflow: hidden;
+        opacity: 0.2;
+        line-height: 1.0;
+    }
+
+    :global(.textLayer > span) {
+        color: transparent;
+        position: absolute;
+        white-space: pre;
+        cursor: text;
+        transform-origin: 0% 0%;
+    }
+</style>
