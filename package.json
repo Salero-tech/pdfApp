@@ -21,6 +21,6 @@
 		"@capacitor/android": "^7.1.0",
 		"@capacitor/cli": "^7.1.0",
 		"@capacitor/core": "^7.1.0",
-		"pdfjs-dist": "5.0.375"
+		"pdfjs-dist": "^5.0.375"
 	}
 }

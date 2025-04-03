@@ -1,12 +1,10 @@
-<script>
+<script lang="ts">
     import { onMount } from 'svelte';
+    let { pageNumber, scale, pdfDoc } = $props();
 
-    export let pageNumber = 1;
-    export let scale = 1.0;
-    export let pdfDoc;
-
-    let canvas;
-    let ctx;
+    let canvas : HTMLCanvasElement;
+    let textContainer: HTMLDivElement = $state();
+    let ctx: CanvasRenderingContext2D;
 
     onMount(() => {
         ctx = canvas.getContext('2d');
@@ -41,24 +39,18 @@
         
         await page.render(renderContext).promise;
         const textContent = await page.getTextContent();
-        
-        // Create text layer div
-        const textLayerDiv = document.createElement('div');
-        textLayerDiv.className = 'textLayer';
-        textLayerDiv.style.width = `${viewport.width}px`;
-        textLayerDiv.style.height = `${viewport.height}px`;
-        canvas.parentNode.appendChild(textLayerDiv);
+      
 
         // Use PDF.js text layer builder
         const renderTextLayer = await import('pdfjs-dist/web/pdf_viewer.mjs');
         const textLayer = new renderTextLayer.TextLayerBuilder({
-          textLayerDiv: textLayerDiv,
-          pageIndex: page.pageNumber - 1,
-          viewport: viewport,
-          textContent: textContent
+          pdfPage: page
         });
-        
-        textLayer.render();
+        await textLayer.render({
+          textContentParams: textContent,
+          viewport: viewport
+        });
+        textContainer.append(textLayer.div);
         
       } catch (error) {
         console.error('Error rendering page:', error);
@@ -68,6 +60,7 @@
 
 <div class="pageContainer">
     <canvas bind:this={canvas}></canvas>
+    <div bind:this={textContainer}></div>
 </div>
 
 <style>
@@ -75,24 +68,5 @@
 
     .pageContainer {
         position: relative;
-    }
-
-    :global(.textLayer) {
-        position: absolute;
-        left: 0;
-        top: 0;
-        right: 0;
-        bottom: 0;
-        overflow: hidden;
-        opacity: 0.2;
-        line-height: 1.0;
-    }
-
-    :global(.textLayer > span) {
-        color: transparent;
-        position: absolute;
-        white-space: pre;
-        cursor: text;
-        transform-origin: 0% 0%;
     }
 </style>
