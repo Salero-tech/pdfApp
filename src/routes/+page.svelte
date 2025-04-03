@@ -3,4 +3,6 @@
 </script>
 
 
-<Pdf />
+<Pdf 
+ pdfUrl="https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf"
+/>

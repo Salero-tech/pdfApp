@@ -1,32 +1,25 @@
 <script>
-    
+    import { onMount } from 'svelte';
+
     export let pageNumber = 1;
     export let scale = 1.0;
     export let pdfDoc;
-
-    import { onMount } from 'svelte';
-    import * as pdfjsLib from 'pdfjs-dist';
-
-    // Set worker path
-    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-        'pdfjs-dist/build/pdf.worker.mjs',
-        import.meta.url
-    ).toString();
 
     let canvas;
     let ctx;
 
     onMount(() => {
-      ctx = canvas.getContext('2d');
-      // Enable high quality image rendering
-      ctx.imageSmoothingEnabled = true;
-      ctx.imageSmoothingQuality = 'high';
-      
+        ctx = canvas.getContext('2d');
+        // Enable high quality image rendering
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+
+        renderPage();
     });
 
-    async function renderPage(num) {
+    async function renderPage() {
       try {
-        const page = await pdfDoc.getPage(num);
+        const page = await pdfDoc.getPage(pageNumber);
         const viewport = page.getViewport({ scale });
         
         // Use device pixel ratio for better rendering on high DPI displays
@@ -55,4 +48,3 @@
 </script>
 
 <canvas bind:this={canvas}></canvas>
-<button onclick={()=>renderPage(pageNumber)}>asdf</button>

@@ -9,48 +9,65 @@
       import.meta.url
     ).toString();
   
+    export let pdfUrl;
 
-
-
-
-    let canvas;
-    let ctx;
+    let pdfContainer;
+    let pdfPages = [];  // Array to hold PdfPage components
     let pdfDoc = null;
     let pageNum = 1;
-    let pageRendering = false;
-    let pageNumPending = null;
     let scale = 2.0; // Increased default scale for higher resolution
-    let pdfUrl = "https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf";
     
     onMount(() => {
-      loadPdf();
+      init();
     });
+
+    async function init() {
+      await loadPdf();
+    }
   
     async function loadPdf(url = pdfUrl) {
       try {
         pageNum = 1;
         pdfDoc = await pdfjsLib.getDocument(url).promise;
+        await createPdfPages(pdfDoc.numPages);
       } catch (error) {
         console.error('Error loading PDF:', error);
       }
     }
-  </script>
 
-<div class="pdfContainer">
-  <PdfPage
-    pageNumber={1}
-    scale={1}
-    pdfDoc={pdfDoc}
-  />
+    async function createPdfPages(numPages) {
+      pdfPages = Array.from({ length: numPages }, (_, i) => ({
+        component: PdfPage,
+        props: {
+          pageNumber: i + 1,
+          scale,
+          pdfDoc
+        }
+      }));
+    }
+</script>
+
+<div class="pdfContainer" bind:this={pdfContainer}>
+  {#each pdfPages as page}
+    <svelte:component 
+      this={page.component}
+      {...page.props}
+    />
+  {/each}
 </div>
 
 
 <style>
   .pdfContainer {
     display: flex;
-    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 1rem;
     
+    padding: 2rem 0;
     width: auto;
     height: auto;
+
+    background-color: rebeccapurple;
   }
 </style>
