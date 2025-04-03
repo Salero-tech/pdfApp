@@ -15,7 +15,6 @@
 
     let canvas;
     let ctx;
-    let pageRendering = false;
 
     onMount(() => {
       ctx = canvas.getContext('2d');
@@ -26,8 +25,6 @@
     });
 
     async function renderPage(num) {
-      pageRendering = true;
-      
       try {
         const page = await pdfDoc.getPage(num);
         const viewport = page.getViewport({ scale });
@@ -50,10 +47,8 @@
         };
         
         await page.render(renderContext).promise;
-        pageRendering = false;
       } catch (error) {
         console.error('Error rendering page:', error);
-        pageRendering = false;
       }
     }
 
