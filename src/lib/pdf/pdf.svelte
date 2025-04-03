@@ -15,7 +15,7 @@
     let pdfPages = [];  // Array to hold PdfPage components
     let pdfDoc = null;
     let pageNum = 1;
-    let scale = 2.0; // Increased default scale for higher resolution
+    let scale = 1.0; // Increased default scale for higher resolution
     
     onMount(() => {
       init();
