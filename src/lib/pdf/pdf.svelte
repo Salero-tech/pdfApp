@@ -1,9 +1,9 @@
 <script lang="ts">
     import { onMount } from 'svelte';
-    import PdfPage from './pdfPage.svelte';
     import { browser } from '$app/environment'; // Import browser check from SvelteKit
     import type { PDFViewer, PDFViewerOptions } from 'pdfjs-dist/types/web/pdf_viewer';
-
+    import {AnnotationMode} from 'pdfjs-dist'
+    export const ssr = false;
     export let pdfUrl;
 
     let container;
@@ -80,6 +80,13 @@
         linkService: pdfLinkService,
         findController: pdfFindController,
         scriptingManager: pdfScriptingManager,
+        supportsPinchToZoom: true,
+        //enableHWA: true,
+        annotationMode: pdfjsLib.AnnotationMode.ENABLED,
+        annotationEditorMode: pdfjsLib.AnnotationEditorType.INK,
+        
+        
+
       };
       pdfViewer = new pdfjsViewer.PDFViewer(opt);
       pdfLinkService.setViewer(pdfViewer);
@@ -104,8 +111,8 @@
       window.addEventListener("keydown", handleKeyZoom);
       //pdf
       eventBus.on("pagesinit", function () {
-        console.log("test");
-        pdfViewer.currentScaleValue = 1;
+        pdfjsViewer.pdfViewer.scroll.lastTouchDistance = 0;
+        pdfjsViewer.pdfViewer._setScale('auto', true);
       });
     }
 
@@ -126,20 +133,27 @@
       }
     }
 
-
-
 </script>
 
-<div class="pdfContainer" bind:this={container}>
+<div class="pdfContainer"
+  bind:this={container}
+  >
   <div class="pdfViewer" bind:this={view}></div>
 </div>
 
 
 <style>
-.pdfContainer {
+  @import 'pdfjs-dist/web/pdf_viewer.css';
+  .pdfViewer {
+
+  }
+  .pdfContainer {
     position: absolute;
-    width: 100vw;
     background-color: rebeccapurple;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
     overflow: scroll;
   }
 </style>
