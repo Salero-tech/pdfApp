@@ -3,70 +3,72 @@
     import PdfPage from './pdfPage.svelte';
     import { browser } from '$app/environment'; // Import browser check from SvelteKit
     import type { PDFViewer, PDFViewerOptions } from 'pdfjs-dist/types/web/pdf_viewer';
- 
-
-
 
     export let pdfUrl;
 
     let container;
     let view;
-    let pdfPages = [];  // Array to hold PdfPage components
-    let pdfDoc = null;
-    let pageNum = 1;
-    let scale = 1.0; // Increased default scale for higher resolution
-    let pdfViewer;
+
+    //pdf
     let pdfjsLib;
     let pdfjsViewer;
+    let pdfViewer;
+    //services
+    let pdfLinkService;
+    let pdfFindController;
+    let pdfScriptingManager;
+    let eventBus;
     
     onMount(async () => {
-      // Only import and initialize PDF.js in the browser
       if (browser) {
-        // Dynamically import PDF.js libraries
-        pdfjsLib = await import('pdfjs-dist');
-        pdfjsViewer = await import('pdfjs-dist/web/pdf_viewer.mjs');
-        
-        // Set worker path
-        pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-          'pdfjs-dist/build/pdf.worker.mjs',
-          import.meta.url
-        ).toString();
-        
-        // Initialize PDF viewer
-        await init();
+        await importLibs();
+        await renderPDF(pdfUrl);
+        setupListeners();
       }
     });
 
-    async function init() {
-      const CMAP_URL = "../../node_modules/pdfjs-dist/cmaps/";
+    async function importLibs() {
+      // Dynamically import PDF.js libraries
+      pdfjsLib = await import('pdfjs-dist');
+      pdfjsViewer = await import('pdfjs-dist/web/pdf_viewer.mjs');
+      
+      // Set worker path
+      pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+        'pdfjs-dist/build/pdf.worker.mjs',
+        import.meta.url
+      ).toString();
+    }
+
+    async function renderPDF(url:String) {
+      const CMAP_URL = new URL(
+      'pdfjs-dist/cmaps/',
+      import.meta.url
+      ).toString()+"/";
+
       const CMAP_PACKED = true;
 
-      const DEFAULT_URL = pdfUrl;
-      // To test the AcroForm and/or scripting functionality, try e.g. this file:
-      // "../../test/pdfs/160F-2019.pdf"
-
       const ENABLE_XFA = true;
-      const SEARCH_FOR = ""; // try "Mozilla";
-
+      
       const SANDBOX_BUNDLE_SRC = new URL(
       'pdfjs-dist/build/pdf.sandbox.mjs',
       import.meta.url
       ).toString();
-      const eventBus = new pdfjsViewer.EventBus();
+
+      eventBus = new pdfjsViewer.EventBus();
 
       // (Optionally) enable hyperlinks within PDF files.
-      const pdfLinkService = new pdfjsViewer.PDFLinkService({
+      pdfLinkService = new pdfjsViewer.PDFLinkService({
         eventBus,
       });
 
       // (Optionally) enable find controller.
-      const pdfFindController = new pdfjsViewer.PDFFindController({
+      pdfFindController = new pdfjsViewer.PDFFindController({
         eventBus,
         linkService: pdfLinkService,
       });
 
       // (Optionally) enable scripting support.
-      const pdfScriptingManager = new pdfjsViewer.PDFScriptingManager({
+      pdfScriptingManager = new pdfjsViewer.PDFScriptingManager({
         eventBus,
         sandboxBundleSrc: SANDBOX_BUNDLE_SRC,
       });
@@ -79,36 +81,53 @@
         findController: pdfFindController,
         scriptingManager: pdfScriptingManager,
       };
-      const pdfViewer:PDFViewer = new pdfjsViewer.PDFViewer(opt);
+      pdfViewer = new pdfjsViewer.PDFViewer(opt);
       pdfLinkService.setViewer(pdfViewer);
       pdfScriptingManager.setViewer(pdfViewer);
 
-      eventBus.on("pagesinit", function () {
-        // We can use pdfViewer now, e.g. let's change default scale.
-        pdfViewer.currentScaleValue = "page-width";
-
-        // We can try searching for things.
-        if (SEARCH_FOR) {
-          eventBus.dispatch("find", { type: "", query: SEARCH_FOR });
-        }
-      });
-
+      
       // Loading document.
       const loadingTask = pdfjsLib.getDocument({
-        url: DEFAULT_URL,
+        url: url,
         cMapUrl: CMAP_URL,
         cMapPacked: CMAP_PACKED,
         enableXfa: ENABLE_XFA,
       });
 
       const pdfDocument = await loadingTask.promise;
-      // Document loaded, specifying document for the viewer and
-      // the (optional) linkService.
       pdfViewer.setDocument(pdfDocument);
-
       pdfLinkService.setDocument(pdfDocument, null);
     }
   
+    function setupListeners() {
+      window.addEventListener("wheel", handleWheelZoom, { passive: false });
+      window.addEventListener("keydown", handleKeyZoom);
+      //pdf
+      eventBus.on("pagesinit", function () {
+        console.log("test");
+        pdfViewer.currentScaleValue = 1;
+      });
+    }
+
+    function handleWheelZoom(e: WheelEvent) {
+    if (!pdfViewer || !e.ctrlKey) return;
+      e.preventDefault();
+      pdfViewer.currentScaleValue *= e.deltaY < 0 ? 1.1 : 0.9;
+    }
+
+    function handleKeyZoom(e: KeyboardEvent) {
+      if (!pdfViewer || !e.ctrlKey) return;
+      if (e.key === "+") {
+        e.preventDefault();
+        pdfViewer.currentScaleValue *= 1.1;
+      } else if (e.key === "-") {
+        e.preventDefault();
+        pdfViewer.currentScaleValue *= 0.9;
+      }
+    }
+
+
+
 </script>
 
 <div class="pdfContainer" bind:this={container}>
@@ -117,10 +136,10 @@
 
 
 <style>
-@import 'pdfjs-dist/web/pdf_viewer.css';
 .pdfContainer {
     position: absolute;
-    height: 100%;
+    width: 100vw;
     background-color: rebeccapurple;
+    overflow: scroll;
   }
 </style>
