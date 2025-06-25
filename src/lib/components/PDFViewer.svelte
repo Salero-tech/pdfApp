@@ -1,202 +1,264 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { browser } from "$app/environment";
-    import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
+    import PDFRenderer from "./pdf/PDFRenderer.svelte";
+    import PDFToolbar from "./pdf/PDFToolbar.svelte";
+    import PDFSidebar from "./pdf/PDFSidebar.svelte";
+    import type { PDFDocumentProxy } from "pdfjs-dist";
 
     // Props
     interface Props {
         src?: string;
-        scale?: number;
         width?: string;
         height?: string;
+        enableTextSelection?: boolean;
+        showThumbnails?: boolean;
+        enableSearch?: boolean;
+        toolbar?: boolean;
     }
 
     let {
         src = "",
-        scale = $bindable(1.0),
         width = "100%",
         height = "600px",
+        enableTextSelection = true,
+        showThumbnails = false,
+        enableSearch = true,
+        toolbar = true,
     }: Props = $props();
 
     // State
     let containerRef = $state<HTMLDivElement>();
-    let canvasContainer = $state<HTMLDivElement>();
-    let pdfDoc = $state<PDFDocumentProxy | null>(null);
+    let pdfDocument = $state<PDFDocumentProxy | null>(null);
     let currentPage = $state(1);
     let totalPages = $state(0);
-    let loading = $state(false);
-    let error = $state("");
-    let pdfjsLib: any = null;
+    let scale = $state(1.0);
+    let rotation = $state(0);
+    let showSidebar = $state(false);
+    let sidebarTab = $state<"thumbnails" | "search">("thumbnails");
+    let requestedPage = $state(1);
 
-    // Configure PDF.js worker and load library
-    onMount(async () => {
-        if (browser) {
-            pdfjsLib = await import("pdfjs-dist");
-            pdfjsLib.GlobalWorkerOptions.workerSrc =
-                "/pdf.js/build/pdf.worker.min.js";
-        }
-    });
-
-    // Load PDF document
-    async function loadPDF() {
-        if (!src || !browser || !pdfjsLib) return;
-
-        loading = true;
-        error = "";
-
-        try {
-            const loadingTask = pdfjsLib.getDocument(src);
-            pdfDoc = await loadingTask.promise;
-            totalPages = pdfDoc.numPages;
-            currentPage = 1;
-            await renderPage(currentPage);
-        } catch (err) {
-            error = `Failed to load PDF: ${err}`;
-            console.error("PDF loading error:", err);
-        } finally {
-            loading = false;
-        }
-    }
-
-    // Render specific page
-    async function renderPage(pageNum: number) {
-        if (!pdfDoc || pageNum < 1 || pageNum > totalPages || !canvasContainer)
-            return;
-
-        try {
-            const page: PDFPageProxy = await pdfDoc.getPage(pageNum);
-            const viewport = page.getViewport({ scale });
-
-            // Clear previous canvas
-            canvasContainer.innerHTML = "";
-
-            // Create canvas
-            const canvas = document.createElement("canvas");
-            const context = canvas.getContext("2d");
-
-            if (!context) {
-                throw new Error("Could not get canvas context");
-            }
-
-            canvas.height = viewport.height;
-            canvas.width = viewport.width;
-            canvas.style.maxWidth = "100%";
-            canvas.style.height = "auto";
-
-            canvasContainer.appendChild(canvas);
-
-            // Render page
-            const renderContext = {
-                canvasContext: context,
-                viewport: viewport,
-            };
-
-            await page.render(renderContext).promise;
-            currentPage = pageNum;
-        } catch (err) {
-            error = `Failed to render page: ${err}`;
-            console.error("Page rendering error:", err);
-        }
-    }
-
-    // Navigation functions
-    function goToPage(pageNum: number) {
-        if (pageNum >= 1 && pageNum <= totalPages) {
-            renderPage(pageNum);
-        }
-    }
-
-    function nextPage() {
-        if (currentPage < totalPages) {
-            goToPage(currentPage + 1);
-        }
-    }
-
-    function prevPage() {
+    // Toolbar event handlers
+    function handlePreviousPage() {
+        console.log("PDFViewer: handlePreviousPage called", {
+            currentPage,
+            totalPages,
+        });
         if (currentPage > 1) {
             goToPage(currentPage - 1);
         }
     }
 
+    function handleNextPage() {
+        console.log("PDFViewer: handleNextPage called", {
+            currentPage,
+            totalPages,
+        });
+        if (currentPage < totalPages) {
+            goToPage(currentPage + 1);
+        }
+    }
+
+    function handleGoToPage(pageNum: number) {
+        console.log("PDFViewer: handleGoToPage called", {
+            pageNum,
+            currentPage,
+            totalPages,
+        });
+        goToPage(pageNum);
+    }
+
+    // Sidebar event handlers
+    function handleSidebarClose() {
+        showSidebar = false;
+    }
+
+    function handleSidebarGoToPage(pageNum: number) {
+        goToPage(pageNum);
+    }
+
+    // Navigation functions
+    function goToPage(pageNum: number) {
+        console.log("PDFViewer: goToPage called", {
+            pageNum,
+            currentPage,
+            totalPages,
+            requestedPage,
+        });
+        if (pageNum >= 1 && pageNum <= totalPages) {
+            requestedPage = pageNum;
+        }
+    }
+
     function zoomIn() {
-        scale = Math.min(scale + 0.25, 3.0);
-        renderPage(currentPage);
+        console.log("PDFViewer: zoomIn called", { scale });
+        scale = Math.min(scale + 0.25, 5.0);
     }
 
     function zoomOut() {
-        scale = Math.max(scale - 0.25, 0.25);
-        renderPage(currentPage);
+        console.log("PDFViewer: zoomOut called", { scale });
+        scale = Math.max(scale - 0.25, 0.1);
     }
 
     function resetZoom() {
+        console.log("PDFViewer: resetZoom called", { scale });
         scale = 1.0;
-        renderPage(currentPage);
     }
 
-    // Watch for src changes
-    $effect(() => {
-        if (src && browser) {
-            loadPDF();
+    function rotatePage() {
+        console.log("PDFViewer: rotatePage called", { rotation });
+        rotation = (rotation + 90) % 360;
+    }
+
+    function fitToWidth() {
+        if (pdfDocument && containerRef) {
+            const containerWidth =
+                containerRef.offsetWidth - (showSidebar ? 280 : 0) - 40;
+            pdfDocument.getPage(currentPage).then((page) => {
+                const viewport = page.getViewport({ scale: 1, rotation });
+                const newScale = containerWidth / viewport.width;
+                scale = Math.max(0.1, Math.min(5.0, newScale));
+            });
         }
+    }
+
+    function fitToPage() {
+        if (pdfDocument && containerRef) {
+            const containerWidth =
+                containerRef.offsetWidth - (showSidebar ? 280 : 0) - 40;
+            const containerHeight =
+                containerRef.offsetHeight - (toolbar ? 50 : 0) - 40;
+
+            pdfDocument.getPage(currentPage).then((page) => {
+                const viewport = page.getViewport({ scale: 1, rotation });
+                const scaleX = containerWidth / viewport.width;
+                const scaleY = containerHeight / viewport.height;
+                const newScale = Math.min(scaleX, scaleY);
+                scale = Math.max(0.1, Math.min(5.0, newScale));
+            });
+        }
+    }
+
+    function toggleSidebar() {
+        showSidebar = !showSidebar;
+        if (showSidebar && showThumbnails) {
+            sidebarTab = "thumbnails";
+        } else if (showSidebar && enableSearch) {
+            sidebarTab = "search";
+        }
+    }
+
+    function downloadPDF() {
+        const link = document.createElement("a");
+        link.href = src;
+        link.download = "document.pdf";
+        link.click();
+    }
+
+    function printPDF() {
+        window.print();
+    }
+
+    // Handle document loaded
+    function handleDocumentLoaded(event: CustomEvent) {
+        pdfDocument = event.detail.document;
+        totalPages = event.detail.totalPages;
+        currentPage = 1;
+    }
+
+    // Handle page rendered
+    function handlePageRendered(event: CustomEvent) {
+        currentPage = event.detail.pageNum;
+    }
+
+    // Handle errors
+    function handleError(event: CustomEvent) {
+        console.error("PDF Error:", event.detail.error);
+    }
+
+    // Debug state changes
+    $effect(() => {
+        console.log("PDFViewer: state changed", {
+            currentPage,
+            totalPages,
+            scale,
+            rotation,
+            requestedPage,
+            showSidebar,
+        });
     });
 </script>
 
 <div
-    class="pdf-viewer"
+    class="pdf-viewer dark-theme"
     style="width: {width}; height: {height};"
     bind:this={containerRef}
 >
     <!-- Toolbar -->
-    <div class="toolbar">
-        <div class="nav-controls">
-            <button
-                onclick={prevPage}
-                disabled={currentPage <= 1}
-                title="Previous page"
-            >
-                ←
-            </button>
+    {#if toolbar}
+        <div class="toolbar-container">
+            <PDFToolbar
+                {currentPage}
+                {totalPages}
+                {scale}
+                canGoPrevious={currentPage > 1}
+                canGoNext={currentPage < totalPages}
+                onPreviousPage={handlePreviousPage}
+                onNextPage={handleNextPage}
+                onGoToPage={handleGoToPage}
+                onZoomIn={zoomIn}
+                onZoomOut={zoomOut}
+                onResetZoom={resetZoom}
+                onRotatePage={rotatePage}
+                onFitToWidth={fitToWidth}
+                onFitToPage={fitToPage}
+                onDownloadPDF={downloadPDF}
+                onPrintPDF={printPDF}
+            />
 
-            <span class="page-info">
-                <input
-                    type="number"
-                    bind:value={currentPage}
-                    onchange={() => goToPage(currentPage)}
-                    min="1"
-                    max={totalPages}
-                    disabled={!pdfDoc}
-                />
-                <span>/ {totalPages}</span>
-            </span>
-
-            <button
-                onclick={nextPage}
-                disabled={currentPage >= totalPages}
-                title="Next page"
-            >
-                →
-            </button>
+            <!-- Sidebar toggle and search toggle -->
+            <div class="toolbar-extras">
+                {#if showThumbnails || enableSearch}
+                    <button
+                        onclick={toggleSidebar}
+                        title="Toggle sidebar"
+                        class="sidebar-toggle"
+                        class:active={showSidebar}
+                    >
+                        ☰
+                    </button>
+                {/if}
+            </div>
         </div>
+    {/if}
 
-        <div class="zoom-controls">
-            <button onclick={zoomOut} title="Zoom out">-</button>
-            <span class="zoom-level">{Math.round(scale * 100)}%</span>
-            <button onclick={zoomIn} title="Zoom in">+</button>
-            <button onclick={resetZoom} title="Reset zoom">Reset</button>
-        </div>
-    </div>
-
-    <!-- Content -->
-    <div class="content">
-        {#if loading}
-            <div class="loading">Loading PDF...</div>
-        {:else if error}
-            <div class="error">{error}</div>
-        {:else if pdfDoc}
-            <div class="canvas-container" bind:this={canvasContainer}></div>
-        {:else}
-            <div class="placeholder">No PDF loaded</div>
+    <!-- Main content -->
+    <div class="main-content">
+        <!-- Sidebar -->
+        {#if showThumbnails || enableSearch}
+            <PDFSidebar
+                {pdfDocument}
+                {currentPage}
+                visible={showSidebar}
+                bind:activeTab={sidebarTab}
+                onClose={handleSidebarClose}
+                onGoToPage={handleSidebarGoToPage}
+            />
         {/if}
+
+        <!-- PDF Content -->
+        <div class="content-area">
+            <PDFRenderer
+                {src}
+                {scale}
+                {rotation}
+                {enableTextSelection}
+                targetPage={requestedPage}
+                ondocumentloaded={handleDocumentLoaded}
+                onpagerendered={handlePageRendered}
+                onerror={handleError}
+            />
+        </div>
     </div>
 </div>
 
@@ -204,105 +266,84 @@
     .pdf-viewer {
         display: flex;
         flex-direction: column;
-        border: 1px solid #ddd;
+        border: 1px solid #555;
         border-radius: 4px;
         overflow: hidden;
-        background: #f5f5f5;
+        font-family:
+            -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: #2d2d2d;
+        color: #fff;
     }
 
-    .toolbar {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 8px 12px;
-        background: #fff;
-        border-bottom: 1px solid #ddd;
-        flex-shrink: 0;
-    }
-
-    .nav-controls {
+    .toolbar-container {
         display: flex;
         align-items: center;
-        gap: 8px;
+        background: #3d3d3d;
+        border-bottom: 1px solid #555;
+        position: relative;
     }
 
-    .zoom-controls {
+    .toolbar-extras {
+        position: absolute;
+        right: 12px;
         display: flex;
         align-items: center;
         gap: 8px;
     }
 
-    .page-info {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .page-info input {
-        width: 50px;
-        padding: 2px 4px;
-        border: 1px solid #ccc;
+    .sidebar-toggle {
+        padding: 6px 8px;
+        border: 1px solid #666;
         border-radius: 2px;
-        text-align: center;
-    }
-
-    button {
-        padding: 4px 8px;
-        border: 1px solid #ccc;
-        border-radius: 2px;
-        background: #fff;
+        background: #4d4d4d;
+        color: #fff;
         cursor: pointer;
         font-size: 12px;
+        transition: background-color 0.2s;
     }
 
-    button:hover:not(:disabled) {
-        background: #f0f0f0;
+    .sidebar-toggle:hover {
+        background: #5d5d5d;
     }
 
-    button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
+    .sidebar-toggle.active {
+        background: #007acc;
+        border-color: #007acc;
     }
 
-    .zoom-level {
-        font-size: 12px;
-        min-width: 40px;
-        text-align: center;
+    .main-content {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+        height: 100%;
     }
 
-    .content {
+    .content-area {
         flex: 1;
         overflow: auto;
         padding: 16px;
+        background: #f5f5f5;
         display: flex;
         justify-content: center;
         align-items: flex-start;
     }
 
-    .canvas-container {
-        display: flex;
-        justify-content: center;
-        background: white;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    }
+    /* Responsive design */
+    @media (max-width: 768px) {
+        .toolbar-container {
+            flex-direction: column;
+            align-items: stretch;
+        }
 
-    .loading,
-    .error,
-    .placeholder {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 40px;
-        color: #666;
-    }
+        .toolbar-extras {
+            position: static;
+            justify-content: center;
+            padding: 8px;
+            border-top: 1px solid #555;
+        }
 
-    .error {
-        color: #d32f2f;
-        background: #ffebee;
-        border-radius: 4px;
-    }
-
-    .loading {
-        color: #1976d2;
+        .content-area {
+            padding: 8px;
+        }
     }
 </style>

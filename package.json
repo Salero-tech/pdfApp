@@ -5,10 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "node scripts/copy-pdfjs-worker.js && vite build",
+    "build": "vite build",
     "preview": "vite preview",
-    "prepare": "svelte-kit sync || echo ''",
-    "postinstall": "node scripts/copy-pdfjs-worker.js"
+    "prepare": "svelte-kit sync || echo ''"
   },
   "devDependencies": {
     "@sveltejs/adapter-auto": "^4.0.0",
