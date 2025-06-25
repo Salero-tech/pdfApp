@@ -1,8 +1,12 @@
 <script lang="ts">
-  import Pdf from '$lib/pdf/pdf.svelte';
+    // Path to your PDF (relative to public)
+    let pdfUrl = "/test.pdf";
+    // Path to the viewer, with the PDF as a query param
+    let viewerUrl = `/pdf.js/web/viewer.html?file=${encodeURIComponent(pdfUrl)}`;
 </script>
 
-
-<Pdf 
- pdfUrl="https://raw.githubusercontent.com/mozilla/pdf.js/ba2edeae/web/compressed.tracemonkey-pldi-09.pdf"
-/>
+<iframe
+    src={viewerUrl}
+    style="width: 100%; height: 90vh; border: none;"
+    title="PDF.js Official Viewer"
+></iframe>
