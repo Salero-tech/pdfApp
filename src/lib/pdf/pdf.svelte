@@ -22,32 +22,28 @@
     let pdfViewerOptions: PDFViewerOptions = {
       eventBus,
       container: viewerContainer,
-      enableHWA: true,
-      annotationMode: pdfjsLib.AnnotationEditorType.INK,            // Enable annotation editing
-      annotationEditorMode: pdfjsLib.AnnotationEditorType.INK
+      
     };
-
     pdfViewer = new PDFViewer(pdfViewerOptions);
 
     const pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
     pdfViewer.setDocument(pdfDoc);
-    // Default to view-only mode
-    pdfViewer.annotationEditorMode = { mode: 0 };
   });
 
   function setAnnotationMode(mode: number) {
     if (pdfViewer) {
-      pdfViewer.annotationEditorMode.mode = mode;
+      pdfViewer.annotationEditorMode = { mode };
+      console.log(`Annotation mode set to: ${mode}`);
     }
   }
 </script>
 
 <!-- Toolbar -->
 <div class="toolbar">
-  <button on:click={() => setAnnotationMode(0)}>View</button>
-  <button on:click={() => setAnnotationMode(1)}>Ink</button>
-  <button on:click={() => setAnnotationMode(2)}>Highlight</button>
-  <button on:click={() => setAnnotationMode(3)}>Text</button>
+  <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.NONE)}>View</button>
+  <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.INK)}>Ink</button>
+  <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.HIGHLIGHT)}>Highlight</button>
+  <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.FREETEXT)}>Text</button>
 </div>
 
 <!-- Container for the PDF viewer -->
