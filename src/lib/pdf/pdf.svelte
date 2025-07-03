@@ -1,73 +1,48 @@
 <script lang="ts">
-    import { onMount } from 'svelte';
-    import * as pdfjsLib from 'pdfjs-dist';
-    import PdfPage from './pdfPage.svelte';
-    
-    // Set worker path
-    pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-      'pdfjs-dist/build/pdf.worker.mjs',
-      import.meta.url
-    ).toString();
-  
-    export let pdfUrl;
+  import { onMount, tick } from 'svelte';
+  import * as pdfjsLib from 'pdfjs-dist';
+  import { EventBus, PDFViewer } from 'pdfjs-dist/web/pdf_viewer.mjs';
+  import type { PDFViewerOptions } from 'pdfjs-dist/types/web/pdf_viewer';
 
-    let pdfContainer;
-    let pdfPages = [];  // Array to hold PdfPage components
-    let pdfDoc = null;
-    let pageNum = 1;
-    let scale = 2.0; // Increased default scale for higher resolution
-    
-    onMount(() => {
-      init();
-    });
+  export let pdfUrl: string;
 
-    async function init() {
-      await loadPdf();
-    }
-  
-    async function loadPdf(url = pdfUrl) {
-      try {
-        pageNum = 1;
-        pdfDoc = await pdfjsLib.getDocument(url).promise;
-        await createPdfPages(pdfDoc.numPages);
-      } catch (error) {
-        console.error('Error loading PDF:', error);
-      }
-    }
+  let viewerContainer: HTMLDivElement;
+  let pdfViewer: PDFViewer;
 
-    async function createPdfPages(numPages) {
-      pdfPages = Array.from({ length: numPages }, (_, i) => ({
-        component: PdfPage,
-        props: {
-          pageNumber: i + 1,
-          scale,
-          pdfDoc
-        }
-      }));
-    }
+  // Set worker path
+  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.mjs',
+    import.meta.url
+  ).toString();
+
+  onMount(async () => {
+    await tick();
+
+    const eventBus = new EventBus();
+    let pdfViewerOptions: PDFViewerOptions = {
+      eventBus,
+      container: viewerContainer,
+    };
+    pdfViewer = new PDFViewer(pdfViewerOptions);
+
+    const pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
+    pdfViewer.setDocument(pdfDoc);
+  });
 </script>
 
-<div class="pdfContainer" bind:this={pdfContainer}>
-  {#each pdfPages as page}
-    <svelte:component 
-      this={page.component}
-      {...page.props}
-    />
-  {/each}
+<!-- Container for the PDF viewer -->
+<div bind:this={viewerContainer} class="pdfViewerContainer">
+  <div class="pdfViewer"></div>
 </div>
 
-
 <style>
-  .pdfContainer {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    gap: 1rem;
-    
-    padding: 2rem 0;
-    width: auto;
-    height: auto;
+  @import 'pdfjs-dist/web/pdf_viewer.css';
 
-    background-color: rebeccapurple;
+  .pdfViewerContainer {
+    position: absolute;
+    width: 100vw;
+    height: 90vh;
+    overflow: auto;
+    background: #222;
   }
 </style>

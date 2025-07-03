@@ -3,6 +3,7 @@
     let { pageNumber, scale, pdfDoc } = $props();
 
     let canvas : HTMLCanvasElement;
+    let drawCanvase: HTMLCanvasElement;
     let textContainer: HTMLDivElement = $state();
     let ctx: CanvasRenderingContext2D;
 
@@ -60,6 +61,7 @@
 
 <div class="pageContainer">
     <canvas bind:this={canvas}></canvas>
+    <canvas bind:this={drawCanvase} class="drawCanvas"></canvas>
     <div bind:this={textContainer}></div>
 </div>
 
