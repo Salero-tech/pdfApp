@@ -30,7 +30,19 @@
     pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
     pdfViewer.setDocument(pdfDoc);
 
-    pdfViewer.downloadManager.download
+    pdfDoc.annotationStorage.setValue("test", {
+      annotationType: 3,
+      rect: [141.37500000000003, 737.2499923706055, 184.45000076293948, 757.75],
+      color: [0, 0, 0], // Red color
+      fontsize: 10,
+      id: null,
+      structTreeParentId: null,
+      pageIndex: 0,
+      rotation: 0,
+      value: "asdfasf",
+    });
+    
+
   });
 
   function setAnnotationMode(mode: number) {
@@ -43,7 +55,6 @@
   async function downloadRenderedPDFWithAnnotations() {
     
     if (pdfDoc) {
-      
       // Get the original PDF data
       const pdfData = await pdfDoc.saveDocument();
 
