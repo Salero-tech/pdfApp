@@ -1,13 +1,14 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import * as pdfjsLib from 'pdfjs-dist';
-  import { EventBus, PDFViewer } from 'pdfjs-dist/web/pdf_viewer.mjs';
+  import { DownloadManager, EventBus, PDFViewer } from 'pdfjs-dist/web/pdf_viewer.mjs';
   import type { PDFViewerOptions } from 'pdfjs-dist/types/web/pdf_viewer';
 
   export let pdfUrl: string;
 
   let viewerContainer: HTMLDivElement;
   let pdfViewer: PDFViewer;
+  let pdfDoc: pdfjsLib.PDFDocumentProxy;
 
   // Set worker path
   pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
@@ -22,18 +23,31 @@
     let pdfViewerOptions: PDFViewerOptions = {
       eventBus,
       container: viewerContainer,
-      
+      downloadManager: new DownloadManager(),
     };
     pdfViewer = new PDFViewer(pdfViewerOptions);
 
-    const pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
+    pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
     pdfViewer.setDocument(pdfDoc);
+
+    pdfViewer.downloadManager.download
   });
 
   function setAnnotationMode(mode: number) {
     if (pdfViewer) {
       pdfViewer.annotationEditorMode = { mode };
       console.log(`Annotation mode set to: ${mode}`);
+    }
+  }
+
+  async function downloadRenderedPDFWithAnnotations() {
+    
+    if (pdfDoc) {
+      
+      // Get the original PDF data
+      const pdfData = await pdfDoc.saveDocument();
+
+      pdfViewer.downloadManager.download(pdfData, "test", "test.pdf");
     }
   }
 </script>
@@ -44,6 +58,7 @@
   <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.INK)}>Ink</button>
   <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.HIGHLIGHT)}>Highlight</button>
   <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.FREETEXT)}>Text</button>
+  <button on:click={downloadRenderedPDFWithAnnotations}>Download Annotated PDF</button>
 </div>
 
 <!-- Container for the PDF viewer -->
