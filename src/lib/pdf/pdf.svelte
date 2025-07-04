@@ -39,14 +39,17 @@
     }
   }
 
-  async function downloadRenderedPDFWithAnnotations() {
-    
+  // Export a function to get annotated PDF data
+  export async function getAnnotatedPDFData(): Promise<Uint8Array | null> {
     if (pdfDoc) {
-      // Get the original PDF data
-      const pdfData = await pdfDoc.saveDocument();
+      return await pdfDoc.saveDocument();
+    }
+    return null;
+  }
 
-      console.log(pdfDoc.annotationStorage.serializable);
-
+  async function downloadRenderedPDFWithAnnotations() {
+    const pdfData = await getAnnotatedPDFData();
+    if (pdfData) {
       pdfViewer.downloadManager.download(pdfData, "test", "test.pdf");
     }
   }
@@ -76,7 +79,7 @@
     background: #333;
     color: #fff;
     position: absolute;
-    top: 0;
+    top: 3rem; /* Leave space for file bar */
     left: 0;
     z-index: 100;
   }
@@ -93,9 +96,9 @@
   }
   .pdfViewerContainer {
     position: absolute;
-    top: 2.5rem; /* leave space for toolbar */
+    top: 5.5rem; /* Leave space for both file bar and toolbar */
     width: 100vw;
-    height: calc(90vh - 2.5rem);
+    height: calc(100vh - 5.5rem);
     overflow: auto;
     background: #222;
   }

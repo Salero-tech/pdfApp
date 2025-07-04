@@ -23,6 +23,7 @@
 		"@capacitor/cli": "^7.1.0",
 		"@capacitor/core": "^7.1.0",
 		"@capacitor/filesystem": "^7.1.2",
+		"@capacitor/status-bar": "^7.0.1",
 		"pdfjs-dist": "^5.3.31"
 	}
 }
