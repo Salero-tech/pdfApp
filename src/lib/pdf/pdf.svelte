@@ -26,25 +26,10 @@
       downloadManager: new DownloadManager(),
     };
     pdfViewer = new PDFViewer(pdfViewerOptions);
-
+    console.log("file");
     pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
     pdfViewer.setDocument(pdfDoc);
-
-    pdfDoc.annotationStorage.setValue("pdfjs_internal_editor_1", {
-      annotationType: 3,
-      rect: [141.37500000000003, 737.2499923706055, 184.45000076293948, 757.75],
-      color: [0, 0, 0], // Red color
-      fontsize: 10,
-      id: null,
-      structTreeParentId: null,
-      pageIndex: 0,
-      rotation: 0,
-      value: "aaaa",
-    });
-
-    pdfViewer.setDocument(pdfDoc);
     
-
   });
 
   function setAnnotationMode(mode: number) {
