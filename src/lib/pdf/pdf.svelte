@@ -30,7 +30,7 @@
     pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
     pdfViewer.setDocument(pdfDoc);
 
-    pdfDoc.annotationStorage.setValue("test", {
+    pdfDoc.annotationStorage.setValue("pdfjs_internal_editor_1", {
       annotationType: 3,
       rect: [141.37500000000003, 737.2499923706055, 184.45000076293948, 757.75],
       color: [0, 0, 0], // Red color
@@ -39,8 +39,10 @@
       structTreeParentId: null,
       pageIndex: 0,
       rotation: 0,
-      value: "asdfasf",
+      value: "aaaa",
     });
+
+    pdfViewer.setDocument(pdfDoc);
     
 
   });
@@ -57,6 +59,8 @@
     if (pdfDoc) {
       // Get the original PDF data
       const pdfData = await pdfDoc.saveDocument();
+
+      console.log(pdfDoc.annotationStorage.serializable);
 
       pdfViewer.downloadManager.download(pdfData, "test", "test.pdf");
     }
