@@ -3,13 +3,9 @@
     import Pdf from '$lib/components/pdf/pdf.svelte';
     import { Filesystem, Directory } from '@capacitor/filesystem';
     
-    const { activeTab } = $props<{
-        activeTab: number;
-    }>();
 
     let selectedFile: File | null = null;
     let selectedFileName: string | null = null;
-    let pdfcurrent = $state<Pdf | null>(null);
 
  async function selectFile(event: Event) {
     const fileInput = event.target as HTMLInputElement;
@@ -17,11 +13,11 @@
     if (file) {
       selectedFile = file;
       selectedFileName = file.name;
-      tabs.tabs[activeTab].titel = selectedFileName;
+      tabs.currentTab.titel = selectedFileName;
       
       const reader = new FileReader();
       reader.onload = () => {
-        tabs.tabs[activeTab].content = reader.result as string;
+        tabs.currentTab.pdfUrl = reader.result as string;
       };
       reader.readAsDataURL(file);
     }
@@ -71,10 +67,8 @@
 
 
 <div class="flex-1">
-    {#if tabs.tabs[activeTab] && tabs.tabs[activeTab].content}
-    {#key activeTab}
-    <Pdf bind:this={tabs.tabs[activeTab].pdf} pdfUrl={tabs.tabs[activeTab].content} />
-    {/key}
+    {#if tabs.currentTab && tabs.currentTab.pdfUrl}
+    <Pdf  pdfUrl={tabs.currentTab.pdfUrl} />
     {:else}
     <div class="flex justify-center items-center h-full">
         <input
