@@ -1,7 +1,6 @@
 <script lang="ts">
-  import type { ContentContainer } from '$lib/components/contentContainer';
+  import { type ContentContainer, tabs } from '$lib/components/contentContainer.svelte';
 
-  export let tabs: ContentContainer[] = [];
   export let activeTab = 0;
   export let onTabSelect = (index) => {};
   export let onAddTab = () => {};
@@ -18,7 +17,7 @@
 </script>
 
 <div class="flex border-b border-green-800 bg-gray-50 overflow-scroll nowra">
-  {#each tabs as tab, i}
+  {#each tabs.tabs as tab, i}
     <div class="relative flex items-center">
       <button
         class={`px-6 py-3 cursor-pointer border-none bg-transparent outline-none text-base transition-colors text-nowrap
