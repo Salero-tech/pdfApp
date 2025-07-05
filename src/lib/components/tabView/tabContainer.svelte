@@ -68,7 +68,9 @@
 
 <div class="flex-1">
     {#if tabs.currentTab && tabs.currentTab.pdfUrl}
-    <Pdf  pdfUrl={tabs.currentTab.pdfUrl} />
+    {#key tabs.currentTabIndex}
+      <Pdf  pdfUrl={tabs.currentTab.pdfUrl} />
+    {/key}
     {:else}
     <div class="flex justify-center items-center h-full">
         <input
