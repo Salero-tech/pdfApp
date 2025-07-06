@@ -1,10 +1,11 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { onDestroy, onMount, tick } from 'svelte';
   import * as pdfjsLib from 'pdfjs-dist';
   import { EventBus, PDFViewer } from 'pdfjs-dist/web/pdf_viewer.mjs';
   import type { PDFViewerOptions } from 'pdfjs-dist/types/web/pdf_viewer';
   import { tabs } from '../../data/contentContainer.svelte';
     import { savePDF } from '../../data/fileInteractions.svelte';
+    import { tools } from '$lib/data/tools.svelte';
 
   let viewerContainer: HTMLDivElement;
   let pdfViewer: PDFViewer;
@@ -27,12 +28,29 @@
     pdfViewer = new PDFViewer(pdfViewerOptions);
     pdfDoc = await pdfjsLib.getDocument(new Uint8Array(tabs.currentTab.content)).promise;
     pdfViewer.setDocument(pdfDoc);
+    tools.registerPdf(setAnnotationMode);
     
+  });
+
+  onDestroy(() => {
+    if (pdfViewer) {
+      pdfViewer.cleanup();
+      pdfViewer = null;
+    }
+    if (pdfDoc) {
+      pdfDoc.destroy();
+      pdfDoc = null;
+    }
+    tools.removePdf(setAnnotationMode);
   });
 
 
 
   function setAnnotationMode(mode: number) {
+    if (mode == -1) {
+      savePDFData()
+      return;
+    }
     if (pdfViewer) {
       pdfViewer.annotationEditorMode = { mode };
       console.log(`Annotation mode set to: ${mode}`);
@@ -45,16 +63,8 @@
     await savePDF();
   }
 
-</script>
 
-<!-- Toolbar -->
-<div class="toolbar">
-  <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.NONE)}>View</button>
-  <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.INK)}>Ink</button>
-  <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.HIGHLIGHT)}>Highlight</button>
-  <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.FREETEXT)}>Text</button>
-  <button on:click={savePDFData}>save</button>
-</div>
+</script>
 
 <!-- Container for the PDF viewer -->
 <div bind:this={viewerContainer} class="pdfViewerContainer">
@@ -63,34 +73,10 @@
 
 <style>
   @import 'pdfjs-dist/web/pdf_viewer.css';
-
-  .toolbar {
-    display: flex;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    background: #333;
-    color: #fff;
-    position: absolute;
-    top: 3rem; /* Leave space for file bar */
-    left: 0;
-    z-index: 100;
-  }
-  .toolbar button {
-    background: #444;
-    color: #fff;
-    border: none;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    border-radius: 3px;
-  }
-  .toolbar button:hover {
-    background: #666;
-  }
   .pdfViewerContainer {
     position: absolute;
-    top: 5.5rem; /* Leave space for both file bar and toolbar */
     width: 100vw;
-    height: calc(100vh - 5.5rem);
+    height: 95vh;
     overflow: auto;
     background: #222;
   }
