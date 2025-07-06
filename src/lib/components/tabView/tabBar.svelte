@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { type ContentContainer, tabs } from '$lib/components/contentContainer.svelte';
+  import { tabs } from '$lib/data/contentContainer.svelte';
     import { onMount } from 'svelte';
 
   onMount(() => {

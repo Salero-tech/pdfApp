@@ -1,6 +1,5 @@
 <script lang="ts">
     import TabBar from "$lib/components/tabView/tabBar.svelte";
-    import { type ContentContainer, tabs } from "$lib/components/contentContainer.svelte";
     import TabContainer from "$lib/components/tabView/tabContainer.svelte";
     import { onMount } from "svelte";
     import { StatusBar, Style } from '@capacitor/status-bar';

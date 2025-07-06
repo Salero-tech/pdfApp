@@ -1,6 +1,6 @@
 import { FilePicker } from '@capawesome/capacitor-file-picker';
 import { Filesystem, Directory, Encoding } from '@capacitor/filesystem';
-import { tabs } from './contentContainer.svelte';
+import { tabs } from '../data/contentContainer.svelte';
 
 
 function base64ToUint8Array(base64: string): Uint8Array {

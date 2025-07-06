@@ -1,7 +1,7 @@
 <script lang="ts">
-    import { type ContentContainer, tabs } from '../contentContainer.svelte';
+    import { tabs } from '../../data/contentContainer.svelte';
     import Pdf from '$lib/components/pdf/pdf.svelte';
-    import { pickFile } from '$lib/components/fileInteractions.svelte';
+    import { pickFile } from '$lib/data/fileInteractions.svelte';
 </script>
 
 

@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import * as pdfjsLib from 'pdfjs-dist';
-  import { DownloadManager, EventBus, PDFViewer } from 'pdfjs-dist/web/pdf_viewer.mjs';
+  import { EventBus, PDFViewer } from 'pdfjs-dist/web/pdf_viewer.mjs';
   import type { PDFViewerOptions } from 'pdfjs-dist/types/web/pdf_viewer';
-  import { tabs } from '../contentContainer.svelte';
-    import { savePDF } from '../fileInteractions.svelte';
+  import { tabs } from '../../data/contentContainer.svelte';
+    import { savePDF } from '../../data/fileInteractions.svelte';
 
   let viewerContainer: HTMLDivElement;
   let pdfViewer: PDFViewer;
