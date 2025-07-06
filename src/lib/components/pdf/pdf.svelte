@@ -1,42 +1,24 @@
 <script lang="ts">
   import { onDestroy, onMount, tick } from 'svelte';
   import * as pdfjsLib from 'pdfjs-dist';
-  import { EventBus, PDFViewer } from 'pdfjs-dist/web/pdf_viewer.mjs';
-  import type { PDFViewerOptions } from 'pdfjs-dist/types/web/pdf_viewer';
   import { tabs } from '../../data/contentContainer.svelte';
-    import { savePDF } from '../../data/fileInteractions.svelte';
-    import { tools } from '$lib/data/tools.svelte';
+  import { savePDF } from '../../data/fileInteractions.svelte';
+  import { tools } from '$lib/data/tools.svelte';
+  import { loadPDF } from './pdfUtils.svelte';
+  import PdfPage from './pdfPage.svelte';
 
-  let viewerContainer: HTMLDivElement;
-  let pdfViewer: PDFViewer;
+
+
   let pdfDoc: pdfjsLib.PDFDocumentProxy;
-
-  // Set worker path
-  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-    'pdfjs-dist/build/pdf.worker.mjs',
-    import.meta.url
-  ).toString();
+  let scale = 1.0;
 
   onMount(async () => {
-    await tick();
-
-    const eventBus = new EventBus();
-    let pdfViewerOptions: PDFViewerOptions = {
-      eventBus,
-      container: viewerContainer,
-    };
-    pdfViewer = new PDFViewer(pdfViewerOptions);
-    pdfDoc = await pdfjsLib.getDocument(new Uint8Array(tabs.currentTab.content)).promise;
-    pdfViewer.setDocument(pdfDoc);
+    pdfDoc = await loadPDF(tabs.currentTab.content);
     tools.registerPdf(setAnnotationMode);
     
   });
 
   onDestroy(() => {
-    if (pdfViewer) {
-      pdfViewer.cleanup();
-      pdfViewer = null;
-    }
     if (pdfDoc) {
       pdfDoc.destroy();
       pdfDoc = null;
@@ -51,10 +33,6 @@
       savePDFData()
       return;
     }
-    if (pdfViewer) {
-      pdfViewer.annotationEditorMode = { mode };
-      console.log(`Annotation mode set to: ${mode}`);
-    }
   }
 
 
@@ -62,22 +40,12 @@
     tabs.currentTab.content = await pdfDoc.saveDocument()
     await savePDF();
   }
-
-
 </script>
 
-<!-- Container for the PDF viewer -->
-<div bind:this={viewerContainer} class="pdfViewerContainer">
-  <div class="pdfViewer"></div>
+<div class="flex flex-col items-center h-full min-h-0 overflow-scroll pt-4">
+  {#if pdfDoc}
+    {#each Array(pdfDoc.numPages) as _, i}
+      <PdfPage {pdfDoc} pageNumber={i + 1} scale={scale} />
+    {/each}
+  {/if}
 </div>
-
-<style>
-  @import 'pdfjs-dist/web/pdf_viewer.css';
-  .pdfViewerContainer {
-    position: absolute;
-    width: 100vw;
-    height: 95vh;
-    overflow: auto;
-    background: #222;
-  }
-</style>
