@@ -6,9 +6,6 @@
   import { Filesystem, Directory } from '@capacitor/filesystem';
   import { type ContentContainer, tabs } from '../contentContainer.svelte';
 
-
-  export let pdfData: string;
-
   let viewerContainer: HTMLDivElement;
   let pdfViewer: PDFViewer;
   let pdfDoc: pdfjsLib.PDFDocumentProxy;
@@ -28,10 +25,8 @@
       container: viewerContainer,
       downloadManager: new DownloadManager(),
     };
-    console.log("render", pdfData);
     pdfViewer = new PDFViewer(pdfViewerOptions);
-    console.log("file");
-    pdfDoc = await pdfjsLib.getDocument(pdfData).promise;
+    pdfDoc = await pdfjsLib.getDocument(tabs.currentTab.content).promise;
     pdfViewer.setDocument(pdfDoc);
     
   });

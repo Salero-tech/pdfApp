@@ -8,7 +8,7 @@
 <div class="flex-1">
     {#if tabs.currentTab && tabs.currentTab.content}
     {#key tabs.currentTabIndex}
-      <Pdf pdfData={tabs.currentTab.content} />
+      <Pdf />
     {/key}
     {:else}
     <div class="flex justify-center items-center h-full">
