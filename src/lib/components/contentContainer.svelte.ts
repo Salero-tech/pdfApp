@@ -1,8 +1,9 @@
-import { type FilePicker, type PickedFile } from '@capawesome/capacitor-file-picker';
+import { type PickedFile } from '@capawesome/capacitor-file-picker';
 
 export interface ContentContainer {
     fileName: string;
     file: PickedFile | null;
+    filePath: string | null;
     content: Uint8Array | null;
 }
 

@@ -26,7 +26,7 @@
       downloadManager: new DownloadManager(),
     };
     pdfViewer = new PDFViewer(pdfViewerOptions);
-    pdfDoc = await pdfjsLib.getDocument(tabs.currentTab.content).promise;
+    pdfDoc = await pdfjsLib.getDocument(new Uint8Array(tabs.currentTab.content)).promise;
     pdfViewer.setDocument(pdfDoc);
     
   });

@@ -25,6 +25,7 @@ export async function pickFile() {
         const file = result.files[0];
 
         tabs.currentTab.file = file;
+        tabs.currentTab.filePath = file.path || null;
         tabs.currentTab.fileName = file.name;
         tabs.currentTab.content = base64ToUint8Array(file.data!);
     }
