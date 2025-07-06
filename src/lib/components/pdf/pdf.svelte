@@ -3,8 +3,8 @@
   import * as pdfjsLib from 'pdfjs-dist';
   import { DownloadManager, EventBus, PDFViewer } from 'pdfjs-dist/web/pdf_viewer.mjs';
   import type { PDFViewerOptions } from 'pdfjs-dist/types/web/pdf_viewer';
-  import { Filesystem, Directory } from '@capacitor/filesystem';
-  import { type ContentContainer, tabs } from '../contentContainer.svelte';
+  import { tabs } from '../contentContainer.svelte';
+    import { savePDF } from '../fileInteractions.svelte';
 
   let viewerContainer: HTMLDivElement;
   let pdfViewer: PDFViewer;
@@ -23,7 +23,6 @@
     let pdfViewerOptions: PDFViewerOptions = {
       eventBus,
       container: viewerContainer,
-      downloadManager: new DownloadManager(),
     };
     pdfViewer = new PDFViewer(pdfViewerOptions);
     pdfDoc = await pdfjsLib.getDocument(new Uint8Array(tabs.currentTab.content)).promise;
@@ -31,38 +30,7 @@
     
   });
 
-  async function saveFile() {
-    if (!tabs.currentTab.file || !tabs.currentTab.fileName) {
-      alert('No file selected.');
-      console.log('No file selected.');
-      return;
-    }
 
-    try {
-      // Get annotated PDF data from PDF component
-      const annotatedData = await getAnnotatedPDFData();
-      
-      let dataToSave: string;
-      if (annotatedData) {
-        // Convert Uint8Array to base64
-        dataToSave = btoa(String.fromCharCode(...annotatedData));
-      } else {
-        // Fallback to original file data
-        dataToSave = pdfUrl!.split(',')[1];
-      }
-      
-      await Filesystem.writeFile({
-        path: tabs.currentTab.fileName,
-        data: dataToSave,
-        directory: Directory.Documents,
-      });
-      
-      alert(`File saved with annotations as ${tabs.currentTab.fileName}`);
-    } catch (error) {
-      console.error('Error saving file:', error);
-      alert('Error saving file');
-    }
-  }
 
   function setAnnotationMode(mode: number) {
     if (pdfViewer) {
@@ -71,29 +39,12 @@
     }
   }
 
-  // Export a function to get annotated PDF data
-  export async function getAnnotatedPDFData(): Promise<Uint8Array | null> {
-    if (pdfDoc) {
-      return await pdfDoc.saveDocument();
-    }
-    return null;
+
+  async function savePDFData() {
+    tabs.currentTab.content = await pdfDoc.saveDocument()
+    await savePDF();
   }
 
-  async function downloadRenderedPDFWithAnnotations() {
-    try {
-      saveFile();
-    }
-    catch (error) {
-      console.error('Error saving file:', error);
-      alert('Error saving file');
-      console.log("starting download");
-      const pdfData = await getAnnotatedPDFData();
-      if (pdfData) {
-        pdfViewer.downloadManager.download(pdfData, "test", "test.pdf");
-      }
-    }
-    
-  }
 </script>
 
 <!-- Toolbar -->
@@ -102,7 +53,7 @@
   <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.INK)}>Ink</button>
   <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.HIGHLIGHT)}>Highlight</button>
   <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.FREETEXT)}>Text</button>
-  <button on:click={downloadRenderedPDFWithAnnotations}>save</button>
+  <button on:click={savePDFData}>save</button>
 </div>
 
 <!-- Container for the PDF viewer -->
