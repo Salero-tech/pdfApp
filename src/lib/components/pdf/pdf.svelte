@@ -1,10 +1,10 @@
 <script lang="ts">
   import { onMount, tick } from 'svelte';
   import * as pdfjsLib from 'pdfjs-dist';
-  import { DownloadManager, EventBus, PDFViewer } from 'pdfjs-dist/web/pdf_viewer.mjs';
+  import { EventBus, PDFViewer } from 'pdfjs-dist/web/pdf_viewer.mjs';
   import type { PDFViewerOptions } from 'pdfjs-dist/types/web/pdf_viewer';
-
-  export let pdfUrl: string;
+  import { tabs } from '../../data/contentContainer.svelte';
+    import { savePDF } from '../../data/fileInteractions.svelte';
 
   let viewerContainer: HTMLDivElement;
   let pdfViewer: PDFViewer;
@@ -23,14 +23,14 @@
     let pdfViewerOptions: PDFViewerOptions = {
       eventBus,
       container: viewerContainer,
-      downloadManager: new DownloadManager(),
     };
     pdfViewer = new PDFViewer(pdfViewerOptions);
-    console.log("file");
-    pdfDoc = await pdfjsLib.getDocument(pdfUrl).promise;
+    pdfDoc = await pdfjsLib.getDocument(new Uint8Array(tabs.currentTab.content)).promise;
     pdfViewer.setDocument(pdfDoc);
     
   });
+
+
 
   function setAnnotationMode(mode: number) {
     if (pdfViewer) {
@@ -39,20 +39,12 @@
     }
   }
 
-  // Export a function to get annotated PDF data
-  export async function getAnnotatedPDFData(): Promise<Uint8Array | null> {
-    if (pdfDoc) {
-      return await pdfDoc.saveDocument();
-    }
-    return null;
+
+  async function savePDFData() {
+    tabs.currentTab.content = await pdfDoc.saveDocument()
+    await savePDF();
   }
 
-  async function downloadRenderedPDFWithAnnotations() {
-    const pdfData = await getAnnotatedPDFData();
-    if (pdfData) {
-      pdfViewer.downloadManager.download(pdfData, "test", "test.pdf");
-    }
-  }
 </script>
 
 <!-- Toolbar -->
@@ -61,7 +53,7 @@
   <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.INK)}>Ink</button>
   <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.HIGHLIGHT)}>Highlight</button>
   <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.FREETEXT)}>Text</button>
-  <button on:click={downloadRenderedPDFWithAnnotations}>Download Annotated PDF</button>
+  <button on:click={savePDFData}>save</button>
 </div>
 
 <!-- Container for the PDF viewer -->
