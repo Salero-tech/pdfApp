@@ -45,7 +45,7 @@
     tabs.currentTab.content = await pdfDoc.saveDocument()
     await savePDF();
   }
-  
+
   tools.addTool("👁️", () => setAnnotationMode(pdfjsLib.AnnotationEditorType.NONE));
   tools.addTool("🛑", () => setAnnotationMode(pdfjsLib.AnnotationEditorType.NONE));
   tools.addTool("✏️", () => setAnnotationMode(pdfjsLib.AnnotationEditorType.INK));
@@ -65,7 +65,6 @@
   @import 'pdfjs-dist/web/pdf_viewer.css';
   .pdfViewerContainer {
     position: absolute;
-    top: 5.5rem; /* Leave space for both file bar and toolbar */
     width: 100vw;
     height: calc(100vh - 5.5rem);
     overflow: auto;
