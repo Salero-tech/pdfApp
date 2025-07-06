@@ -11,7 +11,7 @@
 
 </script>
 
-<div class="flex border-b border-green-800 bg-gray-50 overflow-scroll nowra">
+<div class="flex border-b border-green-800 bg-gray-50  nowra">
   {#each tabs.tabs as tab, i}
     <div class="relative flex items-center">
       <button

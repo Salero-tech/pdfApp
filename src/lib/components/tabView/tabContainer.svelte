@@ -5,7 +5,7 @@
 </script>
 
 
-<div class="flex-1">
+<div class="flex-1 overflow-scroll">
     {#if tabs.currentTab && tabs.currentTab.content}
     {#key tabs.currentTabIndex}
       <Pdf />
