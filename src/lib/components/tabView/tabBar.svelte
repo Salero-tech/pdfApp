@@ -23,7 +23,7 @@
         on:click={() => tabs.switchTabTo(i)}
         type="button"
       >
-        {tab.titel}
+        {tab.fileName}
       </button>
       <button
         class="absolute right-1 top-1 text-xs text-gray-400 hover:text-red-500 px-1 py-0.5 rounded"
