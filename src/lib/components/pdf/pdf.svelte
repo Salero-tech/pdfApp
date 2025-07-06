@@ -5,6 +5,7 @@
   import type { PDFViewerOptions } from 'pdfjs-dist/types/web/pdf_viewer';
   import { tabs } from '../../data/contentContainer.svelte';
     import { savePDF } from '../../data/fileInteractions.svelte';
+    import { tools } from '$lib/data/tools.svelte';
 
   let viewerContainer: HTMLDivElement;
   let pdfViewer: PDFViewer;
@@ -44,17 +45,16 @@
     tabs.currentTab.content = await pdfDoc.saveDocument()
     await savePDF();
   }
+  
+  tools.addTool("👁️", () => setAnnotationMode(pdfjsLib.AnnotationEditorType.NONE));
+  tools.addTool("🛑", () => setAnnotationMode(pdfjsLib.AnnotationEditorType.NONE));
+  tools.addTool("✏️", () => setAnnotationMode(pdfjsLib.AnnotationEditorType.INK));
+  tools.addTool("🖍️", () => setAnnotationMode(pdfjsLib.AnnotationEditorType.HIGHLIGHT));
+  tools.addTool("📝", () => setAnnotationMode(pdfjsLib.AnnotationEditorType.FREETEXT));
+  tools.addTool("💾", () => savePDFData());
+
 
 </script>
-
-<!-- Toolbar -->
-<div class="toolbar">
-  <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.NONE)}>View</button>
-  <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.INK)}>Ink</button>
-  <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.HIGHLIGHT)}>Highlight</button>
-  <button on:click={() => setAnnotationMode(pdfjsLib.AnnotationEditorType.FREETEXT)}>Text</button>
-  <button on:click={savePDFData}>save</button>
-</div>
 
 <!-- Container for the PDF viewer -->
 <div bind:this={viewerContainer} class="pdfViewerContainer">
@@ -63,29 +63,6 @@
 
 <style>
   @import 'pdfjs-dist/web/pdf_viewer.css';
-
-  .toolbar {
-    display: flex;
-    gap: 0.5rem;
-    padding: 0.5rem;
-    background: #333;
-    color: #fff;
-    position: absolute;
-    top: 3rem; /* Leave space for file bar */
-    left: 0;
-    z-index: 100;
-  }
-  .toolbar button {
-    background: #444;
-    color: #fff;
-    border: none;
-    padding: 0.5rem 1rem;
-    cursor: pointer;
-    border-radius: 3px;
-  }
-  .toolbar button:hover {
-    background: #666;
-  }
   .pdfViewerContainer {
     position: absolute;
     top: 5.5rem; /* Leave space for both file bar and toolbar */

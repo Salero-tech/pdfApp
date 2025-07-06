@@ -3,6 +3,7 @@
     import TabContainer from "$lib/components/tabView/tabContainer.svelte";
     import { onMount } from "svelte";
     import { StatusBar, Style } from '@capacitor/status-bar';
+    import Toolbar from "$lib/components/toolbar/toolbar.svelte";
 
     onMount(async () => {
     try {
@@ -16,7 +17,8 @@
 </script>
 
 <main class="h-screen w-screen flex flex-col">
-    <TabBar/>
+    <TabBar />
+    <Toolbar />
     <TabContainer />
 </main>
 
