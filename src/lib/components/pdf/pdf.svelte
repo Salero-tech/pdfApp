@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { onMount, tick } from 'svelte';
+  import { onDestroy, onMount, tick } from 'svelte';
   import * as pdfjsLib from 'pdfjs-dist';
   import { EventBus, PDFViewer } from 'pdfjs-dist/web/pdf_viewer.mjs';
   import type { PDFViewerOptions } from 'pdfjs-dist/types/web/pdf_viewer';
@@ -28,12 +28,29 @@
     pdfViewer = new PDFViewer(pdfViewerOptions);
     pdfDoc = await pdfjsLib.getDocument(new Uint8Array(tabs.currentTab.content)).promise;
     pdfViewer.setDocument(pdfDoc);
+    tools.registerPdf(setAnnotationMode);
     
+  });
+
+  onDestroy(() => {
+    if (pdfViewer) {
+      pdfViewer.cleanup();
+      pdfViewer = null;
+    }
+    if (pdfDoc) {
+      pdfDoc.destroy();
+      pdfDoc = null;
+    }
+    tools.removePdf(setAnnotationMode);
   });
 
 
 
   function setAnnotationMode(mode: number) {
+    if (mode == -1) {
+      savePDFData()
+      return;
+    }
     if (pdfViewer) {
       pdfViewer.annotationEditorMode = { mode };
       console.log(`Annotation mode set to: ${mode}`);
@@ -45,13 +62,6 @@
     tabs.currentTab.content = await pdfDoc.saveDocument()
     await savePDF();
   }
-
-  tools.addTool("👁️", () => setAnnotationMode(pdfjsLib.AnnotationEditorType.NONE));
-  tools.addTool("🛑", () => setAnnotationMode(pdfjsLib.AnnotationEditorType.NONE));
-  tools.addTool("✏️", () => setAnnotationMode(pdfjsLib.AnnotationEditorType.INK));
-  tools.addTool("🖍️", () => setAnnotationMode(pdfjsLib.AnnotationEditorType.HIGHLIGHT));
-  tools.addTool("📝", () => setAnnotationMode(pdfjsLib.AnnotationEditorType.FREETEXT));
-  tools.addTool("💾", () => savePDFData());
 
 
 </script>
@@ -66,7 +76,7 @@
   .pdfViewerContainer {
     position: absolute;
     width: 100vw;
-    height: calc(100vh - 5.5rem);
+    height: 95vh;
     overflow: auto;
     background: #222;
   }
