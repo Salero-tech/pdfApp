@@ -34,7 +34,7 @@
             await page.render({
                 canvasContext: ctx,
                 viewport: viewport,
-                //annotationMode: pdfjsLib.AnnotationMode.DISABLE, 
+                annotationMode: pdfjsLib.AnnotationMode.DISABLE, 
             }).promise;
       
         } catch (error) {

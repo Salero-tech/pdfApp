@@ -4,25 +4,20 @@
   import { tabs } from '../../data/contentContainer.svelte';
   import { savePDF } from '../../data/fileInteractions.svelte';
   import { tools } from '$lib/data/tools.svelte';
-  import { loadPDF } from './pdfUtils.svelte';
+  import { createPdfStorage, loadPDF } from './pdfUtils.svelte';
   import PdfPage from './pdfPage.svelte';
 
-
-
-  let pdfDoc: pdfjsLib.PDFDocumentProxy;
-  let scale = 1.0;
+  let pdfsrc: ReturnType<typeof createPdfStorage>;
 
   onMount(async () => {
-    pdfDoc = await loadPDF(tabs.currentTab.content);
+    let pdfDoc = await loadPDF(tabs.currentTab.content);
+    pdfsrc = createPdfStorage(pdfDoc);
     tools.registerPdf(setAnnotationMode);
     
   });
 
   onDestroy(() => {
-    if (pdfDoc) {
-      pdfDoc.destroy();
-      pdfDoc = null;
-    }
+    pdfsrc.destroy();
     tools.removePdf(setAnnotationMode);
   });
 
@@ -37,23 +32,16 @@
 
 
   async function savePDFData() {
-    tabs.currentTab.content = await pdfDoc.saveDocument()
+    tabs.currentTab.content = await pdfsrc.doc.saveDocument()
     await savePDF();
   }
-
-  async function test () {
-    console.log("jasdf");
-    pdfDoc.annotationStorage.setValue("test", { deleted: true });
-    await pdfDoc.saveDocument();
-    console.log(pdfDoc.annotationStorage.modifiedIds);
-  }
+  
 </script>
 
 <div class="flex flex-col items-center h-full min-h-0 overflow-scroll pt-4">
-  {#if pdfDoc}
-    {#each Array(pdfDoc.numPages) as _, i}
-      <PdfPage {pdfDoc} pageNumber={i + 1} scale={scale} />
-      <button onclick={test}>button</button>
+  {#if pdfsrc && pdfsrc.doc}
+    {#each Array(pdfsrc.doc.numPages) as _, i}
+      <PdfPage {pdfsrc} pageNumber={i + 1} />
     {/each}
   {/if}
 </div>
