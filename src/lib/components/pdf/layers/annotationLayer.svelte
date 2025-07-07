@@ -1,6 +1,7 @@
 <script lang="ts">
     import { onMount } from "svelte";
     import { renderAnnotations } from "./annotation/annotation.svelte";
+    import type { PDFPageProxy } from "pdfjs-dist";
 
     let { page, scale = 1.0 } = $props();
 
@@ -22,6 +23,8 @@
 
     async function prepareAnnotaions() {
         const annotations = await page.getAnnotations();
+        console.log(annotations);
+        
         renderAnnotations(annotations, ctx, page.getViewport({ scale }));
     }
 </script>

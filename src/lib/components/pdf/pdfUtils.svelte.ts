@@ -6,6 +6,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
 ).toString();
 
 
+
+
 export async function loadPDF(data: Uint8Array): Promise<pdfjsLib.PDFDocumentProxy> {
     return await pdfjsLib.getDocument(new Uint8Array(data)).promise;
 }

@@ -40,12 +40,20 @@
     tabs.currentTab.content = await pdfDoc.saveDocument()
     await savePDF();
   }
+
+  async function test () {
+    console.log("jasdf");
+    pdfDoc.annotationStorage.setValue("test", { deleted: true });
+    await pdfDoc.saveDocument();
+    console.log(pdfDoc.annotationStorage.modifiedIds);
+  }
 </script>
 
 <div class="flex flex-col items-center h-full min-h-0 overflow-scroll pt-4">
   {#if pdfDoc}
     {#each Array(pdfDoc.numPages) as _, i}
       <PdfPage {pdfDoc} pageNumber={i + 1} scale={scale} />
+      <button onclick={test}>button</button>
     {/each}
   {/if}
 </div>

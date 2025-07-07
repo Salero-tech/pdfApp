@@ -12,7 +12,7 @@ export function renderFreeText(annotation: any, ctx: CanvasRenderingContext2D, v
 
     // Font size and name
     const fontSize = annotation.defaultAppearanceData?.fontSize || 10;
-    const fontName = annotation.defaultAppearanceData?.fontName || "Helv";
+    const fontName = annotation.defaultAppearanceData?.fontName || "Arial";
     ctx.font = `${fontSize}px ${fontName}`;
 
     // Font color
@@ -30,7 +30,7 @@ export function renderFreeText(annotation: any, ctx: CanvasRenderingContext2D, v
 
     // Split text into lines
     const lines = str.split(/\r\n|\r|\n/);
-    const lineHeight = fontSize * 1.2;
+    const lineHeight = fontSize * 1.4;
 
     for (let i = 0; i < lines.length; i++) {
         ctx.fillText(lines[i], x, y + i * lineHeight);

@@ -3,6 +3,7 @@
     import * as pdfjsLib from 'pdfjs-dist';
     import BackLayer from "./layers/backLayer.svelte";
     import AnnotationLayer from "./layers/annotationLayer.svelte";
+    import Pdf from "./pdf.svelte";
 
     let { pdfDoc, pageNumber = 1, scale = 1.0 } = $props();
 
